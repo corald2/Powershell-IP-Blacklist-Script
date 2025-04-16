@@ -1,0 +1,61 @@
+# Define the IP range (CORRECTED FOR VALIDITY)
+$StartIP = "100.0.0.0"
+$EndIP = "192.168.40.248" # CHANGED FROM 300.168.40.248 TO A VALID IP
+
+# Define the Firewall Rule Parameters
+$RuleName = "BlockIncomingIPRange"
+$RuleDirection = "In"
+$Action = "Block"
+$Protocol = "Any"
+
+# Function to Convert IP to Integer for Range Calculation
+function IPToInteger {
+    param ($IP)
+    ($IP.Split('.')[0] * 256 + $IP.Split('.')[1]) * 256 + $IP.Split('.')[2] * 256 + $IP.Split('.')[3]
+}
+
+# Function to Convert Integer back to IP
+function IntegerToIP {
+    param ($Integer)
+    $IP = ([System.IPAddress](New-Object System.Net.IPAddress ($Integer)))
+    $IP.ToString()
+}
+
+# Calculate Start and End IP as Integers
+$StartIPInt = IPToInteger -IP $StartIP
+$EndIPInt = IPToInteger -IP $EndIP
+
+# Validate IP Range (Ensure Start is less than or equal to End)
+if ($StartIPInt -gt $EndIPInt) {
+    Write-Host "Error: Start IP is greater than End IP. Please correct the range."
+    exit
+}
+
+# Attempt to Delete Rule if it Already Exists to Ensure Fresh Start
+try {
+    Get-NetFirewallRule -Name $RuleName | Remove-NetFirewallRule -Confirm:$false
+    Write-Host "Existing rule removed (if present) to ensure a fresh start."
+} catch {
+    # Ignore if rule does not exist
+}
+
+# Loop Through Each IP in the Range and Add to Firewall
+for ($CurrentIPInt = $StartIPInt; $CurrentIPInt -le $EndIPInt; $CurrentIPInt++) {
+    $CurrentIP = IntegerToIP -Integer $CurrentIPInt
+    
+    # Skip Invalid IPs (though range should be valid due to our checks)
+    if ((New-Object System.Net.IPAddress $CurrentIP) -eq $null) { continue }
+    
+    try {
+        # Attempt to Add the IP to the Block List
+        New-NetFirewallRule -Name "$RuleName-$CurrentIP" -Direction $RuleDirection -Action $Action -Protocol $Protocol -RemoteAddress $CurrentIP
+        Write-Host "Added rule for $CurrentIP"
+    } catch {
+        Write-Warning "Failed to add rule for $CurrentIP: $_"
+    }
+    
+    # **CAUTION**: Uncomment the next line if you want to **LIMIT** the number of rules for testing
+    # if ($CurrentIPInt -gt $StartIPInt + 10) { break } # Uncomment and adjust for limited testing
+}
+
+Write-Host "Script Execution Completed."
